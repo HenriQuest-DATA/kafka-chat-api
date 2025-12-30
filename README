@@ -1,0 +1,175 @@
+# Chat em Tempo Real com Kafka, Express e Prisma
+
+Sistema de chat usando Apache Kafka para mensageria, Express.js para API REST e Prisma ORM para gerenciamento do banco de dados PostgreSQL.
+
+## Tecnologias
+
+- **Node.js** + **Express.js** - Backend API
+- **Prisma ORM** - Object-Relational Mapping
+- **PostgreSQL** - Banco de dados
+- **Apache Kafka** - Sistema de mensageria
+- **JWT** - Autenticação
+- **Docker** - Containerização (Kafka + PostgreSQL)
+
+## Pré-requisitos
+
+- Node.js 18+ 
+- Docker e Docker Compose
+- npm ou yarn
+
+## Instalação
+
+### 1. Instalar dependências
+```bash
+npm install
+```
+
+### 2. Configurar variáveis de ambiente
+Copie o arquivo `.env` e ajuste conforme necessário (já está configurado).
+
+### 3. Iniciar serviços Docker
+```bash
+docker-compose up -d
+```
+
+Isso iniciará:
+- PostgreSQL na porta 5432
+- Kafka na porta 9092
+- Zookeeper na porta 2181
+
+### 4. Gerar cliente Prisma
+```bash
+npm run prisma:generate
+```
+
+### 5. Criar tabelas no banco (migração)
+```bash
+npm run prisma:migrate
+```
+
+Dê um nome para a migração, exemplo: `init`
+
+### 6. Iniciar o servidor
+```bash
+npm run dev
+```
+
+## Prisma Studio
+
+Para visualizar e editar dados do banco visualmente:
+
+```bash
+npm run prisma:studio
+```
+
+Acesse: http://localhost:5555
+
+## Testando a API
+
+### 1. Registrar primeiro usuário
+```bash
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "senha123"
+  }'
+```
+
+### 2. Registrar segundo usuário
+```bash
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "bob",
+    "password": "senha456"
+  }'
+```
+
+### 3. Login
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "senha123"
+  }'
+```
+
+Salve o `token` retornado!
+
+### 4. Adicionar amigo
+```bash
+curl -X POST http://localhost:3000/api/users/friends \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI" \
+  -d '{
+    "friendUsername": "bob"
+  }'
+```
+
+### 5. Listar amigos
+```bash
+curl http://localhost:3000/api/users/friends \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI"
+```
+
+### 6. Enviar mensagem
+```bash
+curl -X POST http://localhost:3000/api/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI" \
+  -d '{
+    "receiverUsername": "bob",
+    "message": "Olá, Bob! Como você está?"
+  }'
+```
+
+### 7. Ver histórico de mensagens
+```bash
+curl http://localhost:3000/api/messages/history/bob \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI"
+```
+
+## Fluxo de Mensagens
+
+1. Cliente envia mensagem via POST `/api/messages`
+2. Mensagem é salva no PostgreSQL (via Prisma)
+3. Mensagem é publicada no tópico Kafka `chat-messages`
+4. Consumer Kafka recebe e processa a mensagem
+5. (Futuro) Mensagem é enviada via WebSocket para destinatário online
+
+## Comandos Úteis do Prisma
+
+```bash
+# Gerar cliente Prisma após mudanças no schema
+npm run prisma:generate
+
+# Criar nova migração
+npm run prisma:migrate
+
+# Abrir Prisma Studio
+npm run prisma:studio
+
+# Resetar banco de dados
+npx prisma migrate reset
+
+# Formatar schema
+npx prisma format
+```
+
+## Comandos Docker
+
+```bash
+# Iniciar serviços
+sudo docker compose up -d
+
+# Ver logs
+sudo docker compose logs -f
+
+# Parar serviços
+sudo docker compose down
+
+# Parar e remover volumes (apaga dados)
+sudo docker compose down -v
+```
