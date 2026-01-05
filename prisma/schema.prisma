@@ -8,23 +8,38 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid()) @db.Uuid
   username  String   @unique
   password  String
   createdAt DateTime @default(now()) @map("created_at")
   
-  sentMessages     Message[]    @relation("SentMessages")
-  receivedMessages Message[]    @relation("ReceivedMessages")
-  friendships      Friendship[] @relation("UserFriendships")
-  friendOf         Friendship[] @relation("FriendOf")
+  sentMessages     Message[]      @relation("SentMessages")
+  receivedMessages Message[]      @relation("ReceivedMessages")
+  friendships      Friendship[]   @relation("UserFriendships")
+  friendOf         Friendship[]   @relation("FriendOf")
+  refreshTokens    RefreshToken[]
 
   @@map("users")
 }
 
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  token     String   @unique
+  userId    String   @map("user_id") @db.Uuid
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
 model Friendship {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
-  friendId  Int      @map("friend_id")
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  friendId  String   @map("friend_id") @db.Uuid
   createdAt DateTime @default(now()) @map("created_at")
 
   user   User @relation("UserFriendships", fields: [userId], references: [id], onDelete: Cascade)
@@ -35,9 +50,9 @@ model Friendship {
 }
 
 model Message {
-  id         Int       @id @default(autoincrement())
-  senderId   Int       @map("sender_id")
-  receiverId Int       @map("receiver_id")
+  id         String    @id @default(uuid()) @db.Uuid
+  senderId   String    @map("sender_id") @db.Uuid
+  receiverId String    @map("receiver_id") @db.Uuid
   message    String
   read       Boolean   @default(false)
   readAt     DateTime? @map("read_at")

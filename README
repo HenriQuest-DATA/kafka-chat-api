@@ -29,7 +29,7 @@ Copie o arquivo `.env` e ajuste conforme necessário (já está configurado).
 
 ### 3. Iniciar serviços Docker
 ```bash
-docker-compose up -d
+sudo docker compose up -d
 ```
 
 Isso iniciará:
