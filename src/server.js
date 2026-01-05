@@ -6,9 +6,9 @@ import { initDatabase, disconnectDatabase } from './config/database.js';
 import { initProducer, initConsumer } from './config/kafka.js';
 import { startMessageConsumer } from './services/messageConsumer.js';
 import { initWebSocketServer } from './services/websocket.js';
-import authRoutes from './routes/auth.js';
-import userRoutes from './routes/users.js';
-import messageRoutes from './routes/messages.js';
+import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
 
 dotenv.config();
 
@@ -24,12 +24,12 @@ app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Servidor funcionando com Prisma e WebSocket!' });
+  res.json({ status: 'OK', message: 'Servidor funcionando!' });
 });
 
 async function startServer() {
   try {
-    console.log('Conectando ao banco de dados com Prisma...');
+    console.log('Conectando ao banco de dados...');
     await initDatabase();
 
     console.log('Conectando ao Kafka Producer...');
@@ -45,7 +45,7 @@ async function startServer() {
     initWebSocketServer(server);
 
     server.listen(PORT, () => {
-      console.log(`\nServidor rodando na porta ${PORT}`);
+      console.log(`Servidor rodando na porta ${PORT}`);
       console.log(`HTTP: http://localhost:${PORT}`);
       console.log(`WebSocket: ws://localhost:${PORT}/ws?token=YOUR_JWT_TOKEN\n`);
       
@@ -53,24 +53,24 @@ async function startServer() {
       console.log('ENDPOINTS DISPONÍVEIS:\n');
       
       console.log('AUTENTICAÇÃO:');
-      console.log('  POST   /api/auth/register         - Registrar novo usuário');
-      console.log('  POST   /api/auth/login            - Fazer login\n');
+      console.log('  POST   /api/auth/register         - Registrar usuário');
+      console.log('  POST   /api/auth/login            - Login');
+      console.log('  POST   /api/auth/refresh          - Renovar token');
+      console.log('  POST   /api/auth/logout           - Logout\n');
       
-      console.log('USUÁRIOS E AMIZADES:');
-      console.log('  POST   /api/users/friends                 - Adicionar amigo');
-      console.log('  GET    /api/users/friends                 - Listar amigos (com status online)');
-      console.log('  GET    /api/users/online                  - Listar todos usuários online');
-      console.log('  GET    /api/users/status/:userId          - Verificar se usuário está online\n');
+      console.log('USUÁRIOS:');
+      console.log('  POST   /api/users/friends         - Adicionar amigo');
+      console.log('  GET    /api/users/friends         - Listar amigos');
+      console.log('  GET    /api/users/online          - Usuários online');
+      console.log('  GET    /api/users/status/:userId  - Status do usuário\n');
       
       console.log('MENSAGENS:');
-      console.log('  POST   /api/messages                   - Enviar mensagem');
-      console.log('  GET    /api/messages/history           - Histórico de mensagens');
-      console.log('  PUT    /api/messages/read              - Marcar mensagens como lidas');
-      console.log('  GET    /api/messages/unread            - Contar não lidas de um usuário');
-      console.log('  GET    /api/messages/conversations     - Listar conversas com contadores\n');
+      console.log('  POST   /api/messages              - Enviar mensagem');
+      console.log('  GET    /api/messages/history      - Histórico');
+      console.log('  PUT    /api/messages/read         - Marcar como lida');
+      console.log('  GET    /api/messages/unread       - Contar não lidas');
+      console.log('  GET    /api/messages/conversations - Conversas\n');
       
-      console.log('SAÚDE:');
-      console.log('  GET    /health                    - Status do servidor');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
     });
   } catch (error) {
@@ -80,13 +80,13 @@ async function startServer() {
 }
 
 process.on('SIGINT', async () => {
-  console.log('Encerrando servidor...');
+  console.log('\nEncerrando servidor...');
   await disconnectDatabase();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  console.log('Encerrando servidor...');
+  console.log('\nEncerrando servidor...');
   await disconnectDatabase();
   process.exit(0);
 });
